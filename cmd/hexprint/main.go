@@ -23,7 +23,8 @@ func main() {
 	fmt.Println()
 }
 
-func printRow(buffer []byte) {
+func printRow(offset int, buffer []byte) {
+	fmt.Printf("%08x ", offset)
 	for pos, b := range buffer {
 		switch {
 		case pos == 0:
@@ -35,7 +36,7 @@ func printRow(buffer []byte) {
 	fmt.Println()
 }
 
-func iterate(fileName string, processRow func([]byte)) error {
+func iterate(fileName string, processRow func(int, []byte)) error {
 	f, err := os.Open(fileName)
 	if err != nil {
 		return err
@@ -48,7 +49,7 @@ func iterate(fileName string, processRow func([]byte)) error {
 		for start := 0; start < count; start += columns {
 			end := min(start+columns, count)
 			if start < end {
-				processRow(buffer[start:end])
+				processRow(offset+start, buffer[start:end])
 			}
 		}
 		if err == io.EOF {
