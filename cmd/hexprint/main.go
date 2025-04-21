@@ -24,15 +24,31 @@ func main() {
 }
 
 func printRow(offset int, buffer []byte) {
-	fmt.Printf("%08x ", offset)
-	for pos, b := range buffer {
+	var rawOutput, hexOutput string
+	for pos := range columns {
 		switch {
 		case pos == 0:
 		case pos%group == 0:
-			fmt.Print(" ")
+			rawOutput += " "
+			hexOutput += " "
 		}
-		fmt.Printf("%02x ", b)
+		if pos < len(buffer) {
+			b := buffer[pos]
+			if '!' <= b && b <= '~' {
+				rawOutput += fmt.Sprintf("%c", b)
+			} else {
+				rawOutput += " "
+			}
+			hexOutput += fmt.Sprintf("%02x ", b)
+		} else {
+			rawOutput += " "
+			hexOutput += "   "
+		}
 	}
+	fmt.Printf("%08x ", offset)
+	fmt.Print(rawOutput)
+	fmt.Print(" ")
+	fmt.Print(hexOutput)
 	fmt.Println()
 }
 
