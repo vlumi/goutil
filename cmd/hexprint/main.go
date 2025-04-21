@@ -7,8 +7,8 @@ import (
 	"os"
 )
 
-var bufferSize = 512
-var columns = 24
+var columns = 16
+var bufferSize = columns * 64
 var group = 8
 
 func main() {
@@ -16,28 +16,26 @@ func main() {
 		fmt.Println("No file specified")
 		return
 	}
-	err := iterate(os.Args[1], process)
+	err := iterate(os.Args[1], printRow)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println()
 }
 
-func process(buffer []byte, offset int, count int) {
-	for i, b := range buffer[:count] {
-		pos := (i + offset)
+func printRow(buffer []byte) {
+	for pos, b := range buffer {
 		switch {
 		case pos == 0:
-		case pos%columns == 0:
-			fmt.Println()
 		case pos%group == 0:
 			fmt.Print(" ")
 		}
 		fmt.Printf("%02x ", b)
 	}
+	fmt.Println()
 }
 
-func iterate(fileName string, process func([]byte, int, int)) error {
+func iterate(fileName string, processRow func([]byte)) error {
 	f, err := os.Open(fileName)
 	if err != nil {
 		return err
@@ -47,7 +45,12 @@ func iterate(fileName string, process func([]byte, int, int)) error {
 	offset := 0
 	for {
 		count, err := f.Read(buffer)
-		process(buffer, offset, count)
+		for start := 0; start < count; start += columns {
+			end := min(start+columns, count)
+			if start < end {
+				processRow(buffer[start:end])
+			}
+		}
 		if err == io.EOF {
 			return nil
 		}
